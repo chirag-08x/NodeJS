@@ -14,12 +14,6 @@ const getAllBootcamps = async (req, res, next) => {
       data: allBootcamps,
     });
   } catch (error) {
-    // res.status(400).json({
-    //   success: false,
-    //   message: error.message,
-    //   data: [],
-    // });
-
     next(error);
   }
 };
@@ -30,15 +24,6 @@ const getAllBootcamps = async (req, res, next) => {
 const getSingleBootcamp = async (req, res, next) => {
   try {
     const singleBootcamp = await Bootcamp.findById(req.params.id);
-    if (!singleBootcamp) {
-      return next(
-        new ErrorResponse(
-          `Bootcamp not found with id of - ${req.params.id}`,
-          404
-        )
-      );
-    }
-
     res.status(200).json({
       success: true,
       data: singleBootcamp,
@@ -76,15 +61,6 @@ const updateBootcamp = async (req, res, next) => {
       }
     );
 
-    if (!singleBootcamp) {
-      return next(
-        new ErrorResponse(
-          `Bootcamp not found with id of - ${req.params.id}`,
-          404
-        )
-      );
-    }
-
     res.status(200).json({
       success: true,
       data: singleBootcamp,
@@ -100,15 +76,6 @@ const updateBootcamp = async (req, res, next) => {
 const deleteBootcamp = async (req, res, next) => {
   try {
     const singleBootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
-
-    if (!singleBootcamp) {
-      return next(
-        new ErrorResponse(
-          `Bootcamp not found with id of - ${req.params.id}`,
-          404
-        )
-      );
-    }
 
     res.status(200).json({
       success: true,

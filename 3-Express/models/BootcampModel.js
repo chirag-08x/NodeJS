@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const Schema = new mongoose.Schema({
   name: {
@@ -98,6 +99,15 @@ const Schema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+});
+
+// Create slug from name flield.
+// We have access to this keyword which refers to the document itself.
+// Schema.pre = Means before(pre) saving Schema to DB, do these checks.
+
+Schema.pre("save", function (next) {
+  console.log("Slugify ran", this.name);
+  next();
 });
 
 module.exports = mongoose.model("Bootcamp", Schema);
