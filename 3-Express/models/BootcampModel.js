@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const geocoder = require("../utils/geocoder");
 
 const Schema = new mongoose.Schema({
   name: {
@@ -40,13 +41,12 @@ const Schema = new mongoose.Schema({
   },
   location: {
     type: {
-      type: String, // Don't do `{ location: { type: String } }`
-      enum: ["Point"], // 'location.type' must be 'Point'
-      // required: true,
+      type: String,
+      enum: true,
     },
     coordinates: {
       type: [Number],
-      // required: true,
+      required: true,
       index: "2dsphere", // Create a special 2dsphere index on `City.location`
     },
     formattedAddress: String,
@@ -104,9 +104,27 @@ const Schema = new mongoose.Schema({
 // Create slug from name flield.
 // We have access to this keyword which refers to the document itself.
 // Schema.pre = Means before(pre) saving Schema to DB, do these checks.
-
 Schema.pre("save", function (next) {
-  console.log("Slugify ran", this.name);
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// GeoCoder
+Schema.pre("save", async function (next) {
+  console.log("address", this.address);
+  const loc = await geocoder.geocode(this.address);
+  this.location = {
+    type: "Point",
+    coordinates: [loc[0].longitude, loc[0].latitude],
+    formattedAddress: loc[0].formattedAddress,
+    street: loc[0].streetName,
+    city: loc[0].city,
+    state: loc[0].stateCode,
+    zipcode: loc[0].zipcode,
+    country: loc[0].countryCode,
+  };
+  // Don't save address in DB
+  this.address = undefined;
   next();
 });
 
