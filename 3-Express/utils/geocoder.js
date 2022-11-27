@@ -1,6 +1,5 @@
 const NodeGeocoder = require("node-geocoder");
 
-console.log("hello from utils");
 const options = {
   provider: process.env.GEOCODER_PROVIDER,
   httpAdapter: "https",
@@ -8,6 +7,6 @@ const options = {
   formatter: null,
 };
 
-const geoCoder = NodeGeocoder(options);
+const geocoder = NodeGeocoder(options);
 
-module.exports = geoCoder;
+module.exports = geocoder;

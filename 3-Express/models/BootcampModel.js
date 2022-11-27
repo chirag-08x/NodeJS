@@ -41,12 +41,11 @@ const Schema = new mongoose.Schema({
   },
   location: {
     type: {
-      type: String,
-      enum: true,
+      type: String, // Don't do `{ location: { type: String } }`
+      enum: ["Point"], // 'location.type' must be 'Point'
     },
     coordinates: {
       type: [Number],
-      required: true,
       index: "2dsphere", // Create a special 2dsphere index on `City.location`
     },
     formattedAddress: String,
@@ -104,14 +103,14 @@ const Schema = new mongoose.Schema({
 // Create slug from name flield.
 // We have access to this keyword which refers to the document itself.
 // Schema.pre = Means before(pre) saving Schema to DB, do these checks.
+
 Schema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
-// GeoCoder
+// Geocoder
 Schema.pre("save", async function (next) {
-  console.log("address", this.address);
   const loc = await geocoder.geocode(this.address);
   this.location = {
     type: "Point",
@@ -123,7 +122,8 @@ Schema.pre("save", async function (next) {
     zipcode: loc[0].zipcode,
     country: loc[0].countryCode,
   };
-  // Don't save address in DB
+
+  // Do not save address in DB
   this.address = undefined;
   next();
 });
