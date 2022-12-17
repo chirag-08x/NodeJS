@@ -7,7 +7,48 @@ const geocoder = require("../utils/geocoder");
 // @access  PUBLIC
 const getAllBootcamps = async (req, res, next) => {
   try {
-    const allBootcamps = await Bootcamp.find();
+    let query;
+    // DEEP COPYING req.query so that req.query doesn't get affected if we change something.
+    const reqQuery = { ...req.query };
+    console.log(req.query);
+
+    // FIELDS TO EXECUTE
+    const removeFields = ["select", "sort", "page", "limit"];
+    removeFields.forEach((item) => delete reqQuery[item]);
+
+    // 1 - FILTERING
+    let queryString = JSON.stringify(reqQuery);
+    queryString = queryString.replace(
+      /\b(gt|gte|lt|lte|in)\b/g,
+      (match) => `$${match}`
+    );
+
+    query = Bootcamp.find(JSON.parse(queryString));
+
+    // 2 - SELECT SPECIFIC FIELDS
+    // include = query.select(field name), exclude = query.select(-filed name)
+    if (req.query.select) {
+      const fields = req.query.select.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    // 3 - SORTINNG
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    // 4 - Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    const allBootcamps = await query;
 
     res.status(200).json({
       success: true,
@@ -18,7 +59,6 @@ const getAllBootcamps = async (req, res, next) => {
     next(error);
   }
 };
-
 // @desc    GET Single Bootcamp
 // @route   GET api/v1/bootcamps/:id
 // @access  PUBLIC
@@ -80,10 +120,22 @@ const deleteBootcamp = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: {},
+      data: [],
     });
   } catch (error) {
     next(error);
+  }
+};
+
+const deleteAllBootcamps = async (req, res, next) => {
+  try {
+    await Bootcamp.deleteMany();
+    res.status(200).json({
+      success: true,
+      data: [],
+    });
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -130,4 +182,5 @@ module.exports = {
   updateBootcamp,
   deleteBootcamp,
   getBootcampsInRadius,
+  deleteAllBootcamps,
 };
